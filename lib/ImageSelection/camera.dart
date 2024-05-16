@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'dart:typed_data';  // For Uint8List
-import 'package:master_project_giv/imageValidation.dart' ; // To display the captured photo
+import 'package:master_project_giv/imageValidation.dart';
 
 class CameraPage extends StatefulWidget {
   @override
@@ -62,6 +62,9 @@ class _CameraPageState extends State<CameraPage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenAspectRatio = MediaQuery.of(context).size.width /
+        MediaQuery.of(context).size.height;
+
     return Scaffold(
       appBar: AppBar(
         title: Text("Prendre une photo"),
@@ -88,7 +91,7 @@ class _CameraPageState extends State<CameraPage> {
               child: Stack(
                 children: [
                   AspectRatio(
-                    aspectRatio: _cameraController.value.aspectRatio,
+                    aspectRatio: screenAspectRatio,
                     child: CameraPreview(_cameraController),
                   ),
                   Positioned(
