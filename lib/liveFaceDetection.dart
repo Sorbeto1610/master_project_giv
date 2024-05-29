@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
-import 'dart:typed_data'; // Pour Uint8List
-import 'package:flutter/services.dart'; // Pour WriteBuffer
+import 'dart:typed_data';
+import 'package:flutter/services.dart';
+import 'dart:html' as html;
 
 class LiveFaceDetectionPage extends StatefulWidget {
   @override
@@ -25,7 +26,8 @@ class _LiveFaceDetectionPageState extends State<LiveFaceDetectionPage> {
   Future<void> _initializeCamera() async {
     final cameras = await availableCameras();
     final frontCamera = cameras.firstWhere(
-            (camera) => camera.lensDirection == CameraLensDirection.front);
+          (camera) => camera.lensDirection == CameraLensDirection.front,
+    );
 
     _cameraController = CameraController(
       frontCamera,
@@ -66,10 +68,8 @@ class _LiveFaceDetectionPageState extends State<LiveFaceDetectionPage> {
       cameraImage.height.toDouble(),
     );
 
-    // Simplification de l'orientation de l'image
     final InputImageRotation imageRotation = InputImageRotation.rotation0deg;
 
-    // Simplification du format de l'image
     final InputImageFormat inputImageFormat = InputImageFormat.nv21;
 
     final planeData = cameraImage.planes.map(
