@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_dropzone/flutter_dropzone.dart';
 import 'dart:typed_data';
 import 'package:master_project_giv/imageValidation.dart';  // New page to display the selected image
+import 'package:master_project_giv/liveFaceDetection.dart';  // New page for live face detection
 
 class ImageSelectionPage extends StatefulWidget {
   @override
@@ -48,6 +49,19 @@ class _ImageSelectionPageState extends State<ImageSelectionPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Select Image"),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.camera_alt, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LiveFaceDetectionPage(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {

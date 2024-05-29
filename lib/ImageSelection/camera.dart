@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import 'dart:typed_data';  // For Uint8List
-import 'package:master_project_giv/imageValidation.dart' ; // To display the captured photo
+import 'dart:typed_data';
+import 'package:master_project_giv/imageValidation.dart';
+import 'package:master_project_giv/liveFaceDetection.dart';
 
 class CameraPage extends StatefulWidget {
   @override
@@ -47,7 +48,7 @@ class _CameraPageState extends State<CameraPage> {
     if (_initializeControllerFuture != null) {
       await _initializeControllerFuture;
       final photo = await _cameraController.takePicture();
-      final photoData = await photo.readAsBytes();  // Read the photo data
+      final photoData = await photo.readAsBytes();
       setState(() {
         _capturedPhotoData = photoData;
         Navigator.push(
@@ -65,6 +66,19 @@ class _CameraPageState extends State<CameraPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Prendre une photo"),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.camera, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LiveFaceDetectionPage(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: FutureBuilder(
         future: _initializeControllerFuture,

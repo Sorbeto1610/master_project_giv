@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:responsive_builder/responsive_builder.dart';
-import 'ImageSelection/gallery.dart';
-import 'ImageSelection/camera.dart';
+import 'package:master_project_giv/ImageSelection/camera.dart';
+import 'package:master_project_giv/ImageSelection/gallery.dart';
+import 'package:master_project_giv/liveFaceDetection.dart';
 
 void main() {
   runApp(MyApp());
@@ -11,109 +11,52 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Main Page',
-      home: MainPage(),
+      title: 'Flutter Face Detection',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: HomePage(),
+      routes: {
+        '/camera': (context) => CameraPage(),
+        '/gallery': (context) => ImageSelectionPage(),
+        '/live_face_detection': (context) => LiveFaceDetectionPage(),
+      },
     );
   }
 }
 
-class MainPage extends StatelessWidget {
+class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Welcome'),
+        title: Text('Face Detection Home'),
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          double screenWidth = constraints.maxWidth;
-
-          bool isPhone = screenWidth < 600;
-
-          return isPhone
-              ? _buildMobileLayout(context)
-              : _buildDesktopLayout(context);
-        },
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/gallery');
+              },
+              child: Text('Select Image from Gallery'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/camera');
+              },
+              child: Text('Take Photo with Camera'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/live_face_detection');
+              },
+              child: Text('Live Face Detection'),
+            ),
+          ],
+        ),
       ),
-    );
-  }
-
-  Widget _buildMobileLayout(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ImageSelectionPage()),
-              );
-            },
-            child: Center(
-              child: Text(
-                'Gallery Selection',
-                style: TextStyle(fontSize: 24),
-              ),
-            ),
-          ),
-        ),
-        Expanded(
-          child: ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => CameraPage()),
-              );
-            },
-            child: Center(
-              child: Text(
-                'Take a Picture',
-                style: TextStyle(fontSize: 24),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDesktopLayout(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ImageSelectionPage()),
-              );
-            },
-            child: Center(
-              child: Text(
-                'Gallery Selection',
-                style: TextStyle(fontSize: 24),
-              ),
-            ),
-          ),
-        ),
-        Expanded(
-          child: ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => CameraPage()),
-              );
-            },
-            child: Center(
-              child: Text(
-                'Take a Picture',
-                style: TextStyle(fontSize: 24),
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
