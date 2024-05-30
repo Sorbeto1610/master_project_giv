@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'dart:typed_data';  // For Uint8List
 import 'package:master_project_giv/imageValidation.dart';
+import 'package:master_project_giv/faceDetectionPage.dart';
 
 class CameraPage extends StatefulWidget {
   @override
@@ -12,6 +13,7 @@ class _CameraPageState extends State<CameraPage> {
   late CameraController _cameraController;
   Future<void>? _initializeControllerFuture;
   Uint8List? _capturedPhotoData;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -22,8 +24,15 @@ class _CameraPageState extends State<CameraPage> {
   Future<void> _initializeCamera() async {
     try {
       final cameras = await availableCameras();
+      if (cameras.isEmpty) {
+        setState(() {
+          _errorMessage = "Aucune caméra disponible.";
+        });
+        return;
+      }
       final frontCamera = cameras.firstWhere(
             (camera) => camera.lensDirection == CameraLensDirection.front,
+        orElse: () => cameras.first,
       );
       _cameraController = CameraController(
         frontCamera,
@@ -31,10 +40,25 @@ class _CameraPageState extends State<CameraPage> {
       );
       _initializeControllerFuture = _cameraController.initialize();
       await _initializeControllerFuture;
+      setState(() {
+        _errorMessage = null;
+      });
     } catch (e) {
-      print("Erreur lors de l'initialisation de la caméra : $e");
+      setState(() {
+        _errorMessage = "Erreur lors de l'initialisation de la caméra : $e";
+      });
     }
-    setState(() {});
+  }
+
+  Future<void> _resetCamera() async {
+    try {
+      await _cameraController.dispose();
+      await _initializeCamera();
+    } catch (e) {
+      setState(() {
+        _errorMessage = "Erreur lors de la réinitialisation de la caméra : $e";
+      });
+    }
   }
 
   @override
@@ -50,12 +74,6 @@ class _CameraPageState extends State<CameraPage> {
       final photoData = await photo.readAsBytes();  // Read the photo data
       setState(() {
         _capturedPhotoData = photoData;
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ImageDisplayPage(imageData: _capturedPhotoData!),
-          ),
-        );
       });
     }
   }
@@ -69,7 +87,9 @@ class _CameraPageState extends State<CameraPage> {
       appBar: AppBar(
         title: Text("Prendre une photo"),
       ),
-      body: FutureBuilder(
+      body: _errorMessage != null
+          ? Center(child: Text(_errorMessage!))
+          : FutureBuilder(
         future: _initializeControllerFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -92,19 +112,55 @@ class _CameraPageState extends State<CameraPage> {
                 children: [
                   AspectRatio(
                     aspectRatio: screenAspectRatio,
-                    child: CameraPreview(_cameraController),
+                    child: _capturedPhotoData == null
+                        ? CameraPreview(_cameraController)
+                        : Image.memory(_capturedPhotoData!),
                   ),
-                  Positioned(
-                    bottom: 20,
-                    left: 0,
-                    right: 0,
-                    child: Center(
-                      child: FloatingActionButton(
-                        onPressed: _takePhoto,
-                        child: Icon(Icons.camera),
+                  if (_capturedPhotoData == null)
+                    Positioned(
+                      bottom: 20,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: FloatingActionButton(
+                          onPressed: _takePhoto,
+                          child: Icon(Icons.camera),
+                        ),
+                      ),
+                    )
+                  else
+                    Positioned(
+                      bottom: 20,
+                      left: 0,
+                      right: 0,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          ElevatedButton(
+                            onPressed: () {
+                              // Naviguer vers la page de détection de visage
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => FaceDetectionPage(imageData: _capturedPhotoData!),
+                                ),
+                              );
+                            },
+                            child: Text("Appliquer la détection de visage"),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              // Réinitialiser l'état pour reprendre une nouvelle photo
+                              setState(() {
+                                _capturedPhotoData = null;
+                              });
+                              _resetCamera(); // Réinitialiser la caméra
+                            },
+                            child: Text("Reprendre une photo"),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
                 ],
               ),
             );
