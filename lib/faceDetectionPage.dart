@@ -66,7 +66,7 @@ class _FaceDetectionPageState extends State<FaceDetectionPage> {
         bytes: widget.imageData,
         inputImageData: InputImageData(
           size: Size(_image!.width.toDouble(), _image!.height.toDouble()),
-          imageRotation: InputImageRotation.Rotation_0deg, // Utiliser la valeur correcte pour aucune rotation
+          imageRotation: InputImageRotation.rotation0deg, // Utiliser la valeur correcte pour aucune rotation
           inputImageFormat: InputImageFormat.BGRA8888, // Utiliser le format correct
           planeData: [
             InputImagePlaneMetadata(
@@ -75,7 +75,7 @@ class _FaceDetectionPageState extends State<FaceDetectionPage> {
               width: _image!.width,
             ),
           ],
-        ),
+        ), metadata: null,
       );
 
       final faces = await _faceDetector.processImage(inputImage);
