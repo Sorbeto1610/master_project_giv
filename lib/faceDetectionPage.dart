@@ -1,3 +1,4 @@
+import 'dart:ui';  // Ajoutez cette ligne pour inclure ImageFilter
 import 'package:flutter/material.dart';
 import 'dart:typed_data';
 import 'dart:convert';
@@ -81,33 +82,47 @@ class _FaceDetectionPageState extends State<FaceDetectionPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text("Face Detection"),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-      body: Center(
-        child: _isProcessing
-            ? CircularProgressIndicator()
-            : _image == null
-            ? Text("Loading image...")
-            : AspectRatio(
-          aspectRatio: _image!.width / _image!.height,
-          child: FittedBox(
-            fit: BoxFit.contain,
-            child: SizedBox(
-              width: _image!.width.toDouble(),
-              height: _image!.height.toDouble(),
-              child: Stack(
-                children: [
-                  Image.memory(widget.imageData),
-                  CustomPaint(
-                    size: Size(_image!.width.toDouble(), _image!.height.toDouble()),
-                    painter: FacePainter(_image!, _faces),
+      body: Stack(
+        children: [
+          // Image d'arrière-plan
+          Positioned.fill(
+            child: Image.asset(
+              'IMG_2565.jpeg', // Chemin relatif de l'image
+              fit: BoxFit.cover,
+            ),
+          ),
+          // Contenu de la page
+          Center(
+            child: _isProcessing
+                ? CircularProgressIndicator()
+                : _image == null
+                ? Text("Loading image...")
+                : AspectRatio(
+              aspectRatio: _image!.width / _image!.height,
+              child: FittedBox(
+                fit: BoxFit.contain,
+                child: SizedBox(
+                  width: _image!.width.toDouble(),
+                  height: _image!.height.toDouble(),
+                  child: Stack(
+                    children: [
+                      Image.memory(widget.imageData),
+                      CustomPaint(
+                        size: Size(_image!.width.toDouble(), _image!.height.toDouble()),
+                        painter: FacePainter(_image!, _faces),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
