@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import 'package:firebase_core/firebase_core.dart'; // Importer Firebase
@@ -36,24 +37,11 @@ class MainPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'EGA Detection',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-            ),
-            Text(
-              'Emotions, Gender and Age Detection Application and Tool',
-              style: TextStyle(fontSize: 12, color: Colors.white),
-            ),
-          ],
-        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      extendBodyBehindAppBar: true,
       body: Stack(
         children: [
           // Image d'arrière-plan
@@ -67,13 +55,49 @@ class MainPage extends StatelessWidget {
           LayoutBuilder(
             builder: (context, constraints) {
               double screenWidth = constraints.maxWidth;
-
               bool isPhone = screenWidth < 600;
 
-              return Center(
-                child: isPhone
-                    ? _buildMobileLayout(context)
-                    : _buildDesktopLayout(context),
+              return Column(
+                children: [
+                  SizedBox(height: kToolbarHeight), // Espace pour l'AppBar
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'EGA Detection',
+                          style: TextStyle(
+                            fontSize: 50,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Text(
+                          'Emotions, Gender and Age Detection Application and Tool',
+                          style: TextStyle(
+                            fontSize: 30,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Center(
+                      child: isPhone
+                          ? _buildMobileLayout(context)
+                          : _buildDesktopLayout(context),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      'Créé par DAGHER Irene, CHABREDIER Gabriel et GOBERT Valentine  ',
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
+                ],
               );
             },
           ),
@@ -89,6 +113,7 @@ class MainPage extends StatelessWidget {
         _buildCustomButton(
           context,
           text: 'Gallery Selection',
+          icon: Icons.photo_library,
           onPressed: () {
             Navigator.push(
               context,
@@ -100,6 +125,7 @@ class MainPage extends StatelessWidget {
         _buildCustomButton(
           context,
           text: 'Take a Picture',
+          icon: Icons.camera_alt,
           onPressed: () {
             Navigator.push(
               context,
@@ -118,6 +144,7 @@ class MainPage extends StatelessWidget {
         _buildCustomButton(
           context,
           text: 'Gallery Selection',
+          icon: Icons.photo_library,
           onPressed: () {
             Navigator.push(
               context,
@@ -129,6 +156,7 @@ class MainPage extends StatelessWidget {
         _buildCustomButton(
           context,
           text: 'Take a Picture',
+          icon: Icons.camera_alt,
           onPressed: () {
             Navigator.push(
               context,
@@ -140,19 +168,26 @@ class MainPage extends StatelessWidget {
     );
   }
 
-  Widget _buildCustomButton(BuildContext context, {required String text, required VoidCallback onPressed}) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blueAccent, // Couleur de fond
-        foregroundColor: Colors.white, // Couleur du texte
-        padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15), // Ajuster la taille du bouton
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20), // Coins arrondis
+  Widget _buildCustomButton(BuildContext context, {required String text, required IconData icon, required VoidCallback onPressed}) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white.withOpacity(0.3), // Couleur de fond avec transparence
+            foregroundColor: Colors.white, // Couleur du texte et de l'icône
+            padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15), // Ajuster la taille du bouton
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20), // Coins arrondis
+            ),
+            textStyle: TextStyle(fontSize: 18), // Taille du texte
+          ),
+          onPressed: onPressed,
+          icon: Icon(icon, size: 24), // Icône
+          label: Text(text),
         ),
-        textStyle: TextStyle(fontSize: 18), // Taille du texte
       ),
-      onPressed: onPressed,
-      child: Text(text),
     );
   }
 }
