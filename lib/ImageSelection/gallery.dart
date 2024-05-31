@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_dropzone/flutter_dropzone.dart';
 import 'dart:typed_data';
 import 'package:master_project_giv/imageValidation.dart';  // New page to display the selected image
+import 'package:master_project_giv/faceDetectionPage.dart';  // Import face detection page
 
 class ImageSelectionPage extends StatefulWidget {
   @override
@@ -20,12 +21,6 @@ class _ImageSelectionPageState extends State<ImageSelectionPage> {
       final imageBytes = await pickedFile.readAsBytes();
       setState(() {
         _imageData = imageBytes;
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ImageDisplayPage(imageData: _imageData!),
-          ),
-        );
       });
     }
   }
@@ -34,12 +29,6 @@ class _ImageSelectionPageState extends State<ImageSelectionPage> {
     final imageBytes = await _controller?.getFileData(event);
     setState(() {
       _imageData = imageBytes;
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ImageDisplayPage(imageData: _imageData!),
-        ),
-      );
     });
   }
 
@@ -53,9 +42,26 @@ class _ImageSelectionPageState extends State<ImageSelectionPage> {
         builder: (context, constraints) {
           if (constraints.maxWidth < 600) {  // Mobile view
             return Center(
-              child: ElevatedButton(
-                onPressed: _pickImageFromGallery,
-                child: Text("Select Image from Gallery"),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: _pickImageFromGallery,
+                    child: Text("Select Image from Gallery"),
+                  ),
+                  if (_imageData != null)
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => FaceDetectionPage(imageData: _imageData!),
+                          ),
+                        );
+                      },
+                      child: Text("Appliquer la détection de visage"),
+                    ),
+                ],
               ),
             );
           } else {  // Desktop view
@@ -101,6 +107,25 @@ class _ImageSelectionPageState extends State<ImageSelectionPage> {
                       ),
                     ),
                   ),
+                  if (_imageData != null)
+                    Positioned(
+                      bottom: 20,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => FaceDetectionPage(imageData: _imageData!),
+                              ),
+                            );
+                          },
+                          child: Text("Appliquer la détection de visage"),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             );

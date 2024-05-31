@@ -36,24 +36,48 @@
     // The value below is injected by flutter build, do not touch.
     const serviceWorkerVersion = null;
   </script>
+  <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.8/firebase-app.js"></script>
+  <!-- Add Firebase products that you want to use -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.8/firebase-analytics.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.8/firebase-firestore.js"></script>
+
+
+  <script>
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBHXurMIXMTZCNw6sW0sJ2quoHg5wzF-oQ",
+      authDomain: "givmasterproject.firebaseapp.com",
+      projectId: "givmasterproject",
+      storageBucket: "givmasterproject.appspot.com",
+      messagingSenderId: "618848783949",
+      appId: "1:618848783949:web:7e5826ab19aaa9a8b61604",
+      measurementId: "G-Q6V80E651X"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+  </script>
+
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
 </head>
 <body>
-  <script>
-    window.addEventListener('load', function(ev) {
-      // Download main.dart.js
-      _flutter.loader.loadEntrypoint({
-        serviceWorker: {
-          serviceWorkerVersion: serviceWorkerVersion,
-        },
-        onEntrypointLoaded: function(engineInitializer) {
-          engineInitializer.initializeEngine().then(function(appRunner) {
-            appRunner.runApp();
-          });
-        }
-      });
+<script>
+  window.addEventListener('load', function(ev) {
+    // Download main.dart.js
+    _flutter.loader.loadEntrypoint({
+      serviceWorker: {
+        serviceWorkerVersion: serviceWorkerVersion,
+      },
+      onEntrypointLoaded: function(engineInitializer) {
+        engineInitializer.initializeEngine().then(function(appRunner) {
+          appRunner.runApp();
+        });
+      }
     });
-  </script>
+  });
+</script>
 </body>
 </html>

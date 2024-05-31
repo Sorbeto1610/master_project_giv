@@ -1,9 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:responsive_builder/responsive_builder.dart';
+import 'package:firebase_core/firebase_core.dart'; // Importer Firebase
+//import 'package:firebase_analytics/firebase_analytics.dart'; // Importer Firebase Analytics
 import 'ImageSelection/gallery.dart';
 import 'ImageSelection/camera.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: FirebaseOptions(
+        apiKey: "AIzaSyBHXurMIXMTZCNw6sW0sJ2quoHg5wzF-oQ",
+        authDomain: "givmasterproject.firebaseapp.com",
+        projectId: "givmasterproject",
+        storageBucket: "givmasterproject.appspot.com",
+        messagingSenderId: "618848783949",
+        appId: "1:618848783949:web:7e5826ab19aaa9a8b61604",
+        measurementId: "G-Q6V80E651X"
+    ),
+  );
+  runApp(MyApp());
   runApp(MyApp());
 }
 

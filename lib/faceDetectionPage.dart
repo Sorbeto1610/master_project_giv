@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:typed_data';
-import 'package:google_ml_kit/google_ml_kit.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'dart:ui' as ui;
-import 'dart:async';  // Importer dart:async pour Completer
+import 'dart:async';
 
 class FaceDetectionPage extends StatefulWidget {
   final Uint8List imageData;
@@ -14,20 +15,17 @@ class FaceDetectionPage extends StatefulWidget {
 }
 
 class _FaceDetectionPageState extends State<FaceDetectionPage> {
-  late FaceDetector _faceDetector;
-  List<Face> _faces = [];
   bool _isProcessing = false;
   ui.Image? _image;
+  List<List<double>> _faces = [];
 
   @override
   void initState() {
     super.initState();
-    _faceDetector = GoogleMlKit.vision.faceDetector();
     _loadImage();
   }
 
   Future<void> _loadImage() async {
-    print("Loading image...");
     try {
       final Completer<ui.Image> completer = Completer<ui.Image>();
       ui.decodeImageFromList(widget.imageData, (ui.Image img) {
@@ -37,56 +35,43 @@ class _FaceDetectionPageState extends State<FaceDetectionPage> {
         completer.complete(img);
       });
       await completer.future;
-      print("Image loaded successfully.");
-      _detectFaces();
+      _sendImageForProcessing();
     } catch (e) {
-      print("Error loading image: $e");
       setState(() {
         _isProcessing = false;
       });
     }
   }
 
-  @override
-  void dispose() {
-    _faceDetector.close();
-    super.dispose();
-  }
-
-  Future<void> _detectFaces() async {
-    if (_image == null) {
-      print("No image to process.");
-      return;
-    }
+  Future<void> _sendImageForProcessing() async {
     setState(() {
       _isProcessing = true;
     });
+
     try {
-      final inputImage = InputImage.fromBytes(
-        bytes: widget.imageData,
-        inputImageData: InputImageData(
-          size: Size(_image!.width.toDouble(), _image!.height.toDouble()),
-          imageRotation: InputImageRotation.rotation0deg, // Utiliser la valeur correcte pour aucune rotation
-          inputImageFormat: InputImageFormat.BGRA8888, // Utiliser le format correct
-          planeData: [
-            InputImagePlaneMetadata(
-              bytesPerRow: _image!.width,
-              height: _image!.height,
-              width: _image!.width,
-            ),
-          ],
-        ), metadata: null,
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('http://192.168.1.12:5001/process-image'),  // Utilisez votre adresse IP locale et le port correct
+      );
+      request.files.add(
+        http.MultipartFile.fromBytes('image', widget.imageData, filename: 'image.jpg'),
       );
 
-      final faces = await _faceDetector.processImage(inputImage);
-      print("Faces detected: ${faces.length}");
+      final response = await request.send();
 
-      setState(() {
-        _faces = faces;
-        _isProcessing = false;
-      });
+      if (response.statusCode == 200) {
+        final responseData = await response.stream.bytesToString();
+        final responseJson = jsonDecode(responseData);
+        setState(() {
+          _faces = List<List<double>>.from(responseJson['faces'].map((face) => List<double>.from(face)));
+          _isProcessing = false;
+        });
+      } else {
+        setState(() {
+          _isProcessing = false;
+        });
+      }
     } catch (e) {
-      print("Error detecting faces: $e");
       setState(() {
         _isProcessing = false;
       });
@@ -97,20 +82,31 @@ class _FaceDetectionPageState extends State<FaceDetectionPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Détection de visage"),
+        title: Text("Face Detection"),
       ),
       body: Center(
         child: _isProcessing
             ? CircularProgressIndicator()
             : _image == null
-            ? Text("Chargement de l'image...")
-            : Stack(
-          children: [
-            Image.memory(widget.imageData),
-            CustomPaint(
-              painter: FacePainter(_image!, _faces),
+            ? Text("Loading image...")
+            : AspectRatio(
+          aspectRatio: _image!.width / _image!.height,
+          child: FittedBox(
+            fit: BoxFit.contain,
+            child: SizedBox(
+              width: _image!.width.toDouble(),
+              height: _image!.height.toDouble(),
+              child: Stack(
+                children: [
+                  Image.memory(widget.imageData),
+                  CustomPaint(
+                    size: Size(_image!.width.toDouble(), _image!.height.toDouble()),
+                    painter: FacePainter(_image!, _faces),
+                  ),
+                ],
+              ),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -119,21 +115,25 @@ class _FaceDetectionPageState extends State<FaceDetectionPage> {
 
 class FacePainter extends CustomPainter {
   final ui.Image image;
-  final List<Face> faces;
+  final List<List<double>> faces;
 
   FacePainter(this.image, this.faces);
 
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.drawImage(image, Offset.zero, Paint());
-
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.0
       ..color = Colors.red;
 
-    for (Face face in faces) {
-      canvas.drawRect(face.boundingBox, paint);
+    for (var face in faces) {
+      final rect = Rect.fromLTWH(
+        face[0],
+        face[1],
+        face[2],
+        face[3],
+      );
+      canvas.drawRect(rect, paint);
     }
   }
 
