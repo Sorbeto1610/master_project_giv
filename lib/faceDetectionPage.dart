@@ -19,6 +19,7 @@ class _FaceDetectionPageState extends State<FaceDetectionPage> {
   bool _isProcessing = false;
   ui.Image? _image;
   List<List<double>> _faces = [];
+  String? _agePrediction;
 
   @override
   void initState() {
@@ -71,6 +72,7 @@ class _FaceDetectionPageState extends State<FaceDetectionPage> {
           setState(() {
             _faces = List<List<double>>.from(responseJson['faces'].map((face) => List<double>.from(face)));
             _image = img;
+            _agePrediction = responseJson['age_prediction'];  // Store the age prediction
             _isProcessing = false;
           });
           completer.complete(img);
@@ -111,23 +113,34 @@ class _FaceDetectionPageState extends State<FaceDetectionPage> {
                 ? CircularProgressIndicator()
                 : _image == null
                 ? Text("Loading image...")
-                : AspectRatio(
-              aspectRatio: _image!.width / _image!.height,
-              child: FittedBox(
-                fit: BoxFit.contain,
-                child: SizedBox(
-                  width: _image!.width.toDouble(),
-                  height: _image!.height.toDouble(),
-                  child: Stack(
-                    children: [
-                      CustomPaint(
-                        size: Size(_image!.width.toDouble(), _image!.height.toDouble()),
-                        painter: FacePainter(_image!, _faces),
+                : Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: AspectRatio(
+                    aspectRatio: _image!.width / _image!.height,
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: SizedBox(
+                        width: _image!.width.toDouble(),
+                        height: _image!.height.toDouble(),
+                        child: CustomPaint(
+                          size: Size(_image!.width.toDouble(), _image!.height.toDouble()),
+                          painter: FacePainter(_image!, _faces),
+                        ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
+                if (_agePrediction != null) // Display the age prediction
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      "Age Prediction: $_agePrediction",
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+              ],
             ),
           ),
         ],
