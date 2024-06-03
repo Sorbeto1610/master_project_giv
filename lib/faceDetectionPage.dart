@@ -52,7 +52,7 @@ class _FaceDetectionPageState extends State<FaceDetectionPage> {
     try {
       final request = http.MultipartRequest(
         'POST',
-        Uri.parse('http://192.168.1.12:5001/process-image'),  // Utilisez votre adresse IP locale et le port correct
+        Uri.parse('http://127.0.0.1:5001/process-image'),  // Utilisez votre adresse IP locale et le port correct
       );
       request.files.add(
         http.MultipartFile.fromBytes('image', widget.imageData, filename: 'image.jpg'),
@@ -63,10 +63,19 @@ class _FaceDetectionPageState extends State<FaceDetectionPage> {
       if (response.statusCode == 200) {
         final responseData = await response.stream.bytesToString();
         final responseJson = jsonDecode(responseData);
-        setState(() {
-          _faces = List<List<double>>.from(responseJson['faces'].map((face) => List<double>.from(face)));
-          _isProcessing = false;
+        final base64Image = responseJson['image'].split(',')[1];
+        final Uint8List decodedImage = base64.decode(base64Image);
+
+        final Completer<ui.Image> completer = Completer<ui.Image>();
+        ui.decodeImageFromList(decodedImage, (ui.Image img) {
+          setState(() {
+            _faces = List<List<double>>.from(responseJson['faces'].map((face) => List<double>.from(face)));
+            _image = img;
+            _isProcessing = false;
+          });
+          completer.complete(img);
         });
+        await completer.future;
       } else {
         setState(() {
           _isProcessing = false;
@@ -111,7 +120,6 @@ class _FaceDetectionPageState extends State<FaceDetectionPage> {
                   height: _image!.height.toDouble(),
                   child: Stack(
                     children: [
-                      Image.memory(widget.imageData),
                       CustomPaint(
                         size: Size(_image!.width.toDouble(), _image!.height.toDouble()),
                         painter: FacePainter(_image!, _faces),
@@ -140,6 +148,8 @@ class FacePainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.0
       ..color = Colors.red;
+
+    canvas.drawImage(image, Offset.zero, Paint());
 
     for (var face in faces) {
       final rect = Rect.fromLTWH(
