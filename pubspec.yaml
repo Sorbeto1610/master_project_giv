@@ -10,6 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  process_run: ^0.14.2
   responsive_builder: ^0.7.0
   image_picker: ^1.1.1
   flutter_dropzone: ^4.0.0

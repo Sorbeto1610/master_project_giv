@@ -1,4 +1,4 @@
-import 'dart:ui';  // Ajoutez cette ligne pour inclure ImageFilter
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'dart:typed_data';
 import 'dart:convert';
@@ -7,9 +7,9 @@ import 'dart:ui' as ui;
 import 'dart:async';
 
 class FaceDetectionPage extends StatefulWidget {
-  final Uint8List imageData;
+  final Uint8List imagesData;
 
-  FaceDetectionPage({required this.imageData});
+  FaceDetectionPage({required this.imagesData});
 
   @override
   _FaceDetectionPageState createState() => _FaceDetectionPageState();
@@ -19,6 +19,9 @@ class _FaceDetectionPageState extends State<FaceDetectionPage> {
   bool _isProcessing = false;
   ui.Image? _image;
   List<List<double>> _faces = [];
+  List<String> _agePredictions = [];
+  List<String> _genderPredictions = [];
+  List<String> _emotionPredictions = []; // Added emotion predictions
 
   @override
   void initState() {
@@ -29,7 +32,7 @@ class _FaceDetectionPageState extends State<FaceDetectionPage> {
   Future<void> _loadImage() async {
     try {
       final Completer<ui.Image> completer = Completer<ui.Image>();
-      ui.decodeImageFromList(widget.imageData, (ui.Image img) {
+      ui.decodeImageFromList(widget.imagesData, (ui.Image img) {
         setState(() {
           _image = img;
         });
@@ -41,6 +44,7 @@ class _FaceDetectionPageState extends State<FaceDetectionPage> {
       setState(() {
         _isProcessing = false;
       });
+      print("Error loading image: $e");
     }
   }
 
@@ -52,10 +56,10 @@ class _FaceDetectionPageState extends State<FaceDetectionPage> {
     try {
       final request = http.MultipartRequest(
         'POST',
-        Uri.parse('http://127.0.0.1:5001/process-image'),  // Utilisez votre adresse IP locale et le port correct
+        Uri.parse('http://127.0.0.1:5001/process-image'),  // Use your local IP address and correct port
       );
       request.files.add(
-        http.MultipartFile.fromBytes('image', widget.imageData, filename: 'image.jpg'),
+        http.MultipartFile.fromBytes('image', widget.imagesData, filename: 'image.jpg'),
       );
 
       final response = await request.send();
@@ -71,6 +75,9 @@ class _FaceDetectionPageState extends State<FaceDetectionPage> {
           setState(() {
             _faces = List<List<double>>.from(responseJson['faces'].map((face) => List<double>.from(face)));
             _image = img;
+            _agePredictions = List<String>.from(responseJson['predictions'].map((pred) => pred['age']));
+            _genderPredictions = List<String>.from(responseJson['predictions'].map((pred) => pred['gender']));
+            _emotionPredictions = List<String>.from(responseJson['predictions'].map((pred) => pred['emotion']));  // Store the emotion predictions
             _isProcessing = false;
           });
           completer.complete(img);
@@ -80,11 +87,13 @@ class _FaceDetectionPageState extends State<FaceDetectionPage> {
         setState(() {
           _isProcessing = false;
         });
+        print("Error in response: ${response.statusCode}");
       }
     } catch (e) {
       setState(() {
         _isProcessing = false;
       });
+      print("Error sending image for processing: $e");
     }
   }
 
@@ -98,36 +107,37 @@ class _FaceDetectionPageState extends State<FaceDetectionPage> {
       ),
       body: Stack(
         children: [
-          // Image d'arrière-plan
           Positioned.fill(
             child: Image.asset(
-              'IMG_2565.jpeg', // Chemin relatif de l'image
+              'IMG_2565.jpeg',  // Relative path of the image
               fit: BoxFit.cover,
             ),
           ),
-          // Contenu de la page
           Center(
             child: _isProcessing
                 ? CircularProgressIndicator()
                 : _image == null
                 ? Text("Loading image...")
-                : AspectRatio(
-              aspectRatio: _image!.width / _image!.height,
-              child: FittedBox(
-                fit: BoxFit.contain,
-                child: SizedBox(
-                  width: _image!.width.toDouble(),
-                  height: _image!.height.toDouble(),
-                  child: Stack(
-                    children: [
-                      CustomPaint(
-                        size: Size(_image!.width.toDouble(), _image!.height.toDouble()),
-                        painter: FacePainter(_image!, _faces),
+                : Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: AspectRatio(
+                    aspectRatio: _image!.width / _image!.height,
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: SizedBox(
+                        width: _image!.width.toDouble(),
+                        height: _image!.height.toDouble(),
+                        child: CustomPaint(
+                          size: Size(_image!.width.toDouble(), _image!.height.toDouble()),
+                          painter: FacePainter(_image!, _faces, _agePredictions, _genderPredictions, _emotionPredictions),
+                        ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
         ],
@@ -139,8 +149,11 @@ class _FaceDetectionPageState extends State<FaceDetectionPage> {
 class FacePainter extends CustomPainter {
   final ui.Image image;
   final List<List<double>> faces;
+  final List<String> agePredictions;
+  final List<String> genderPredictions;
+  final List<String> emotionPredictions;
 
-  FacePainter(this.image, this.faces);
+  FacePainter(this.image, this.faces, this.agePredictions, this.genderPredictions, this.emotionPredictions);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -151,7 +164,8 @@ class FacePainter extends CustomPainter {
 
     canvas.drawImage(image, Offset.zero, Paint());
 
-    for (var face in faces) {
+    for (int i = 0; i < faces.length; i++) {
+      var face = faces[i];
       final rect = Rect.fromLTWH(
         face[0],
         face[1],
@@ -159,6 +173,22 @@ class FacePainter extends CustomPainter {
         face[3],
       );
       canvas.drawRect(rect, paint);
+
+      // Draw age, gender, and emotion prediction text
+      final textSpan = TextSpan(
+        text: 'Age: ${agePredictions[i]}, Gender: ${genderPredictions[i]}, Emotion: ${emotionPredictions[i]}',
+        style: TextStyle(color: Colors.red, fontSize: 20),
+      );
+      final textPainter = TextPainter(
+        text: textSpan,
+        textAlign: TextAlign.left,
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout(
+        minWidth: 0,
+        maxWidth: size.width,
+      );
+      textPainter.paint(canvas, Offset(face[0], face[1] - 20));
     }
   }
 

@@ -78,7 +78,7 @@ class _ImageSelectionPageState extends State<ImageSelectionPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => FaceDetectionPage(imageData: _imageData!),
+                              builder: (context) => FaceDetectionPage(imagesData: _imageData!), // Correct parameter
                             ),
                           );
                         },

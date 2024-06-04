@@ -162,7 +162,7 @@ class _CameraPageState extends State<CameraPage> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => FaceDetectionPage(imageData: _capturedPhotoData!),
+                                      builder: (context) => FaceDetectionPage(imagesData: _capturedPhotoData!), // Correct parameter
                                     ),
                                   );
                                 },
